@@ -9,15 +9,22 @@ import (
 var config = &Config{}
 
 type Config struct {
-	OrderPub  pulsar.PubOptions `json:"order_pub"`
-	EsConfigs []EsConfig        `json:"es_configs"`
+	ServiceName string            `json:"service_name"`
+	OrderPub    pulsar.PubOptions `json:"order_pub"`
+	EsConfigs   []EsConfig        `json:"es_configs"`
+	Logger      Logger            `json:"logger"`
 }
 
 type EsConfig struct {
-	IndexName      string   `mapstructure:"index_name" json:"index_name" toml:"index_name"`
-	Addrs          []string `mapstructure:"addrs" json:"addrs" toml:"addrs"`
-	RequestTimeout int      `mapstructure:"timeout" json:"timeout" toml:"timeout"`
-	AutoInit       bool     `mapstructure:"auto_init" json:"auto_init" toml:"auto_init"`
+	IndexName      string   `json:"index_name"`
+	Addrs          []string `json:"addrs" `
+	RequestTimeout int      `json:"timeout"`
+	AutoInit       bool     `json:"auto_init"`
+}
+
+type Logger struct {
+	Level string `json:"level"`
+	Path  string `json:"path"`
 }
 
 func Init(configFile string) {

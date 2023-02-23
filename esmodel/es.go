@@ -11,7 +11,7 @@ type EsModel interface {
 	Name() string
 }
 
-func InitEs() {
+func Init() {
 	ctx := context.Background()
 	esConfigs := config.GetConfig().EsConfigs
 	for _, c := range esConfigs {

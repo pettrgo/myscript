@@ -6,6 +6,7 @@ import (
 	"myscript/cmd/script"
 	"myscript/config"
 	"myscript/esmodel"
+	"myscript/loggers"
 	"os"
 )
 
@@ -29,5 +30,5 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "./config/myscript.conf", "config file")
 	fmt.Println(configFile)
 	config.Init(configFile)
-	cobra.OnInitialize(esmodel.InitEs)
+	cobra.OnInitialize(loggers.Init, esmodel.Init)
 }

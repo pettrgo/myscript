@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"gitlab.xiaoduoai.com/golib/xd_sdk/logger"
 	"golang.org/x/sync/errgroup"
 	"io"
 	"myscript/esmodel/trade_orders"
@@ -53,15 +53,14 @@ func (h *tradeOrderHandler) search(ctx context.Context) error {
 	for {
 		results, err := scroll.Do(ctx)
 		if err != nil {
-			fmt.Println("count:", count)
 			if err != io.EOF {
 				return err
 			}
+			logger.Infof(ctx, "scroll orders finished, count: %v", count)
 			return nil
 		}
 		count += len(results.Hits.Hits)
 		for _, hit := range results.Hits.Hits {
-			//fmt.Println("current orders:", string(hit.Source))
 			select {
 			case h.Hits <- hit.Source:
 			case <-ctx.Done():
@@ -80,11 +79,12 @@ func (h *tradeOrderHandler) consume(ctx context.Context) error {
 	for hit := range h.Hits {
 		order := &model.Order{}
 		if err := json.Unmarshal(hit, order); err != nil {
-			fmt.Println(errors.Wrap(err, fmt.Sprintf("unmarshal order failed, order:%s", string(hit))))
+			logger.WithError(err).Errorf(ctx, "unmarshal order failed, order:%s", string(hit))
 			continue
 		}
 		if !order.NeedUpdate() {
 			//fmt.Println("skip update order")
+			logger.Infof(ctx, "skip current order, order_id: %v", order.OrderID)
 			continue
 		}
 		//fmt.Println(json2.UnsafeMarshalString(order))
@@ -92,17 +92,17 @@ func (h *tradeOrderHandler) consume(ctx context.Context) error {
 		if len(orders) == 100 {
 			//fmt.Printf("upsert orders, orders len: %d, orders: %s \n", len(orders), gjson.UnsafeMarshalString(orders))
 			if err := h.TradeOrdersClient.UpdateOrders(ctx, orders); err != nil {
-				fmt.Println(errors.Wrap(err, "update orders failed"))
+				logger.WithError(err).Error(ctx, "update orders failed")
 			}
-			fmt.Println("update per 100 orders, len:", len(orders))
+			logger.Infof(ctx, "update per 100 orders, len: %v", len(orders))
 			orders = make([]*model.Order, 0, 100)
 		}
 	}
 	if len(orders) > 0 {
 		if err := h.TradeOrdersClient.UpdateOrders(ctx, orders); err != nil {
-			fmt.Println(errors.Wrap(err, "update orders failed"))
+			logger.WithError(err).Error(ctx, "update orders failed")
 		}
-		fmt.Println("finally update orders, len:", len(orders))
+		logger.Infof(ctx, "finally update orders, len:", len(orders))
 	}
 	return nil
 }
