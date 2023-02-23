@@ -2,15 +2,14 @@ package script
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/olivere/elastic/v7"
 	"github.com/spf13/cobra"
+	"gitlab.xiaoduoai.com/golib/xd_sdk/es_official"
 	"gitlab.xiaoduoai.com/golib/xd_sdk/logger"
 	"golang.org/x/sync/errgroup"
-	"io"
 	"myscript/esmodel/trade_orders"
 	"myscript/model"
-	"time"
 )
 
 var OrderRefreshCmd = &cobra.Command{
@@ -21,7 +20,7 @@ var OrderRefreshCmd = &cobra.Command{
 }
 
 type tradeOrderHandler struct {
-	Hits              chan json.RawMessage
+	OrderCh           chan *model.Order
 	TradeOrdersClient *trade_orders.TradeOrdersEsModel
 }
 
@@ -29,7 +28,7 @@ func process(command *cobra.Command, args []string) {
 	fmt.Println("start order refresh")
 	g, ctx := errgroup.WithContext(context.Background())
 	handler := tradeOrderHandler{
-		Hits:              make(chan json.RawMessage),
+		OrderCh:           make(chan *model.Order),
 		TradeOrdersClient: trade_orders.Get(),
 	}
 
@@ -45,46 +44,71 @@ func process(command *cobra.Command, args []string) {
 	fmt.Println("end order refresh")
 }
 
+//func (h *tradeOrderHandler) search(ctx context.Context) error {
+//	defer close(h.Hits)
+//	scroll := h.TradeOrdersClient.ScrollService().Size(1000)
+//	cnt := 0
+//	count := 0
+//	for {
+//		results, err := scroll.Do(ctx)
+//		if err != nil {
+//			if err != io.EOF {
+//				return err
+//			}
+//			logger.Infof(ctx, "scroll orders finished, count: %v", count)
+//			return nil
+//		}
+//		count += len(results.Hits.Hits)
+//		for _, hit := range results.Hits.Hits {
+//			select {
+//			case h.Hits <- hit.Source:
+//			case <-ctx.Done():
+//				return ctx.Err()
+//			}
+//		}
+//		cnt++
+//		if cnt%1000 == 0 {
+//			time.Sleep(time.Millisecond * 100)
+//		}
+//	}
+//}
+
 func (h *tradeOrderHandler) search(ctx context.Context) error {
-	defer close(h.Hits)
-	scroll := h.TradeOrdersClient.ScrollService().Size(1000)
+	defer close(h.OrderCh)
 	cnt := 0
-	count := 0
-	for {
-		results, err := scroll.Do(ctx)
-		if err != nil {
-			if err != io.EOF {
+	orderIDMap := make(map[string]interface{})
+	if err := h.TradeOrdersClient.DoWithScrollSession(ctx, func(scrollSession *es_official.ScrollSession) error {
+		for {
+			orders := make([]*model.Order, 0)
+			extra := map[string]interface{}{
+				"size": 100,
+			}
+			_, scrollId, err := scrollSession.Scroll(ctx, "", nil, elastic.NewBoolQuery(), extra, &orders)
+			if err != nil {
 				return err
 			}
-			logger.Infof(ctx, "scroll orders finished, count: %v", count)
-			return nil
-		}
-		count += len(results.Hits.Hits)
-		for _, hit := range results.Hits.Hits {
-			select {
-			case h.Hits <- hit.Source:
-			case <-ctx.Done():
-				return ctx.Err()
+			if scrollId == "" {
+				return nil
 			}
+			for _, o := range orders {
+				orderIDMap[o.OrderID] = struct{}{}
+			}
+			cnt += len(orders)
 		}
-		cnt++
-		if cnt%1000 == 0 {
-			time.Sleep(time.Millisecond * 100)
-		}
+	}); err != nil {
+		logger.WithError(err).Error(ctx, "scroll orders failed")
+		return err
 	}
+	logger.Infof(ctx, "after scroll, scroll count: %v, count2: %v", cnt, len(orderIDMap))
+	return nil
 }
 
 func (h *tradeOrderHandler) consume(ctx context.Context) error {
 	orders := make([]*model.Order, 0, 100)
-	for hit := range h.Hits {
-		order := &model.Order{}
-		if err := json.Unmarshal(hit, order); err != nil {
-			logger.WithError(err).Errorf(ctx, "unmarshal order failed, order:%s", string(hit))
-			continue
-		}
+	for order := range h.OrderCh {
 		if !order.NeedUpdate() {
 			//fmt.Println("skip update order")
-			logger.Infof(ctx, "skip current order, order_id: %v", order.OrderID)
+			//logger.Infof(ctx, "skip current order, order_id: %v", order.OrderID)
 			continue
 		}
 		//fmt.Println(json2.UnsafeMarshalString(order))
