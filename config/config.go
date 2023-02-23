@@ -1,31 +1,39 @@
 package config
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-	"gitlab.xiaoduoai.com/golib/xd_sdk/logger"
 	"gitlab.xiaoduoai.com/golib/xd_sdk/pubsub/pulsar"
-	"io/ioutil"
+	"os"
 )
 
 var config = &Config{}
 
 type Config struct {
-	OrderPub pulsar.PubOptions `json:"order_pub"`
+	OrderPub  pulsar.PubOptions `json:"order_pub"`
+	EsConfigs []EsConfig        `json:"es_configs"`
 }
 
-func Init(ctx context.Context) {
-	data, err := ioutil.ReadFile("/mnt/d/work/workspace/GoWork/src/myscript/config/myscript.conf")
+type EsConfig struct {
+	IndexName      string   `mapstructure:"index_name" json:"index_name" toml:"index_name"`
+	Addrs          []string `mapstructure:"addrs" json:"addrs" toml:"addrs"`
+	RequestTimeout int      `mapstructure:"timeout" json:"timeout" toml:"timeout"`
+	AutoInit       bool     `mapstructure:"auto_init" json:"auto_init" toml:"auto_init"`
+}
+
+func Init(configFile string) {
+	//data, err := ioutil.ReadFile("/mnt/d/work/workspace/GoWork/src/myscript/config/myscript.conf")
+	//if err != nil {
+	//	logger.Fatalf(ctx, "read config failed, err: %v \n", err)
+	//	return
+	//}
+	data, err := os.ReadFile(configFile)
 	if err != nil {
-		logger.Fatalf(ctx, "read config failed, err: %v \n", err)
-		return
+		panic(err)
 	}
+	//fmt.Println("configFile: ", string(data))
 	if err := json.Unmarshal(data, config); err != nil {
-		fmt.Println(string(data))
-		logger.Fatalf(ctx, "unmarshal config failed, err: %v \n", err)
+		panic(err)
 	}
-	fmt.Println(config)
 }
 
 func GetConfig() *Config {
