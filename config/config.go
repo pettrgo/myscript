@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"gitlab.xiaoduoai.com/golib/xd_sdk/pubsub/pulsar"
 	"os"
 )
@@ -37,7 +38,7 @@ func Init(configFile string) {
 	if err != nil {
 		panic(err)
 	}
-	//fmt.Println("configFile: ", string(data))
+	fmt.Println("configFile: ", string(data))
 	if err := json.Unmarshal(data, config); err != nil {
 		panic(err)
 	}

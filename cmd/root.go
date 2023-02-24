@@ -27,8 +27,12 @@ var configFile string
 
 func init() {
 	rootCmd.AddCommand(script.OrderRefreshCmd)
-	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "./config/myscript.conf", "config file")
-	fmt.Println(configFile)
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file")
+	cobra.OnInitialize(initConfig)
+}
+
+func initConfig() {
 	config.Init(configFile)
-	cobra.OnInitialize(loggers.Init, esmodel.Init)
+	loggers.Init()
+	esmodel.Init()
 }
