@@ -4,8 +4,8 @@ go 1.17
 
 require (
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
+	github.com/olivere/elastic/v7 v7.0.17
 	github.com/pkg/errors v0.9.1
-	github.com/qjpcpu/common v0.0.0-20191007160235-ba9c1f68e780
 	github.com/spf13/cobra v0.0.5
 	gitlab.xiaoduoai.com/golib/xd_sdk v0.2.45
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
@@ -27,7 +27,6 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/dvsekhvalnov/jose2go v0.0.0-20180829124132-7f401d37b68a // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
-	github.com/fatih/color v1.10.0 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -55,7 +54,6 @@ require (
 	github.com/linkedin/goavro/v2 v2.9.8 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mailru/easyjson v0.7.1 // indirect
-	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -65,7 +63,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
-	github.com/olivere/elastic/v7 v7.0.17 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	github.com/pierrec/lz4 v2.0.5+incompatible // indirect
@@ -75,7 +72,7 @@ require (
 	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/pyroscope-io/pyroscope v0.0.29 // indirect
-	github.com/qjpcpu/go-prettyjson v0.0.0-20180807071930-15ac12028a3b // indirect
+	github.com/qjpcpu/common v0.0.0-20191007160235-ba9c1f68e780 // indirect
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
@@ -87,9 +84,6 @@ require (
 	github.com/spf13/viper v1.8.1 // indirect
 	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
-	github.com/tidwall/gjson v1.3.4 // indirect
-	github.com/tidwall/match v1.0.1 // indirect
-	github.com/tidwall/pretty v1.0.0 // indirect
 	github.com/uber/jaeger-client-go v2.15.0+incompatible // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	gitlab.xiaoduoai.com/base/conf-engine/sdk v1.0.7 // indirect

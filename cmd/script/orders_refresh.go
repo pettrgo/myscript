@@ -75,8 +75,8 @@ func process(command *cobra.Command, args []string) {
 
 func (h *tradeOrderHandler) search(ctx context.Context) error {
 	defer close(h.OrderCh)
-	cnt := 0
-	orderIDMap := make(map[string]interface{})
+	//cnt := 0
+	//orderIDMap := make(map[string]interface{})
 	if err := h.TradeOrdersClient.DoWithScrollSession(ctx, func(scrollSession *es_official.ScrollSession) error {
 		for {
 			orders := make([]*model.Order, 0)
@@ -91,15 +91,14 @@ func (h *tradeOrderHandler) search(ctx context.Context) error {
 				return nil
 			}
 			for _, o := range orders {
-				orderIDMap[o.OrderID] = struct{}{}
+				h.OrderCh <- o
 			}
-			cnt += len(orders)
 		}
 	}); err != nil {
 		logger.WithError(err).Error(ctx, "scroll orders failed")
 		return err
 	}
-	logger.Infof(ctx, "after scroll, scroll count: %v, count2: %v", cnt, len(orderIDMap))
+	//logger.Infof(ctx, "after scroll, scroll count: %v, count2: %v", cnt, len(orderIDMap))
 	return nil
 }
 
@@ -107,14 +106,11 @@ func (h *tradeOrderHandler) consume(ctx context.Context) error {
 	orders := make([]*model.Order, 0, 100)
 	for order := range h.OrderCh {
 		if !order.NeedUpdate() {
-			//fmt.Println("skip update order")
 			//logger.Infof(ctx, "skip current order, order_id: %v", order.OrderID)
 			continue
 		}
-		//fmt.Println(json2.UnsafeMarshalString(order))
 		orders = append(orders, order.FieldClipping())
 		if len(orders) == 100 {
-			//fmt.Printf("upsert orders, orders len: %d, orders: %s \n", len(orders), gjson.UnsafeMarshalString(orders))
 			if err := h.TradeOrdersClient.UpdateOrders(ctx, orders); err != nil {
 				logger.WithError(err).Error(ctx, "update orders failed")
 			}
@@ -126,7 +122,7 @@ func (h *tradeOrderHandler) consume(ctx context.Context) error {
 		if err := h.TradeOrdersClient.UpdateOrders(ctx, orders); err != nil {
 			logger.WithError(err).Error(ctx, "update orders failed")
 		}
-		logger.Infof(ctx, "finally update orders, len:", len(orders))
+		logger.Infof(ctx, "finally update orders, len:%v", len(orders))
 	}
 	return nil
 }
