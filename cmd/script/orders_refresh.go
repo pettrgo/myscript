@@ -35,7 +35,7 @@ func process(command *cobra.Command, args []string) {
 	g.Go(func() error {
 		return handler.search(ctx)
 	})
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 50; i++ {
 		g.Go(func() error {
 			return handler.consume(ctx)
 		})
@@ -81,7 +81,7 @@ func (h *tradeOrderHandler) search(ctx context.Context) error {
 		for {
 			orders := make([]*model.Order, 0)
 			extra := map[string]interface{}{
-				"size": 100,
+				"size": 1000,
 			}
 			_, scrollId, err := scrollSession.Scroll(ctx, "", nil, elastic.NewBoolQuery(), extra, &orders)
 			if err != nil {
@@ -91,6 +91,8 @@ func (h *tradeOrderHandler) search(ctx context.Context) error {
 				return nil
 			}
 			for _, o := range orders {
+				//orderIDMap[o.OrderID] = struct{}{}
+				//cnt++
 				h.OrderCh <- o
 			}
 		}
