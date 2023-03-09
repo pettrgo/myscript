@@ -1,6 +1,9 @@
 package utils
 
-import "encoding/json"
+import (
+	"context"
+	"encoding/json"
+)
 
 func SortJsonStr(str string) string {
 	jsonMap := make(map[string]interface{})
@@ -10,6 +13,14 @@ func SortJsonStr(str string) string {
 	data, err := json.Marshal(str)
 	if err != nil {
 		return str
+	}
+	return string(data)
+}
+
+func UnsafeMarshal(ctx context.Context, value interface{}) string {
+	data, err := json.Marshal(value)
+	if err != nil {
+		return ""
 	}
 	return string(data)
 }

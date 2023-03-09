@@ -66,6 +66,12 @@ type Order struct {
 	LogisticsInfo    []LogisticsInfo `bson:"logistics_info"`
 }
 
+type EsOrder struct {
+	OrderInfo   *Order `json:"order_info"`
+	PrimaryTerm *int64 `json:"primary_term"`
+	SeqNo       *int64 `json:"seq_no"`
+}
+
 type Jd struct {
 	BuyerNick   string         `bson:"buyer_nick,omitempty"`
 	StateDesc   string         `bson:"state_desc,omitempty"`

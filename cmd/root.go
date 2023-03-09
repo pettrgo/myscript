@@ -27,6 +27,7 @@ var configFile string
 
 func init() {
 	rootCmd.AddCommand(script.OrderRefreshCmd)
+	rootCmd.AddCommand(script.TestCmd)
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file")
 	cobra.OnInitialize(initConfig)
 }
