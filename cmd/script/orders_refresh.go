@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/olivere/elastic/v7"
 	"github.com/spf13/cobra"
 	"gitlab.xiaoduoai.com/golib/xd_sdk/logger"
 	"golang.org/x/sync/errgroup"
@@ -20,7 +21,8 @@ var OrderRefreshCmd = &cobra.Command{
 }
 
 type tradeOrderHandler struct {
-	OrderCh           chan *model.EsOrder
+	OrderCh chan *model.EsOrder
+	//ParallelCh        chan *model.EsOrder
 	TradeOrdersClient *trade_orders.TradeOrdersEsModel
 }
 
@@ -28,13 +30,17 @@ func process(command *cobra.Command, args []string) {
 	fmt.Println("start order refresh")
 	g, ctx := errgroup.WithContext(context.Background())
 	handler := tradeOrderHandler{
-		OrderCh:           make(chan *model.EsOrder),
+		OrderCh: make(chan *model.EsOrder),
+		//ParallelCh:        make(chan *model.EsOrder),
 		TradeOrdersClient: trade_orders.Get(),
 	}
 
 	g.Go(func() error {
 		return handler.search(ctx)
 	})
+	//g.Go(func() error {
+	//	return handler.parallelTestWorker(ctx)
+	//})
 	for i := 0; i < 50; i++ {
 		g.Go(func() error {
 			return handler.consume(ctx)
@@ -45,8 +51,11 @@ func process(command *cobra.Command, args []string) {
 }
 
 func (h *tradeOrderHandler) search(ctx context.Context) error {
-	defer close(h.OrderCh)
-	scroll := h.TradeOrdersClient.ScrollService().Size(1000)
+	defer func() {
+		close(h.OrderCh)
+		//close(h.ParallelCh)
+	}()
+	scroll := h.TradeOrdersClient.ScrollService().SearchSource(elastic.NewSearchSource().SeqNoAndPrimaryTerm(true)).Size(1000)
 	for {
 		results, err := scroll.Do(ctx)
 		if err != nil {
@@ -78,6 +87,10 @@ func (h *tradeOrderHandler) search(ctx context.Context) error {
 			case <-ctx.Done():
 				return ctx.Err()
 			}
+			//fmt.Println("put order into order chan")
+			//h.OrderCh <- o
+			//fmt.Println("put order into parallel chan")
+			//h.ParallelCh <- o
 		}
 	}
 }
@@ -117,7 +130,7 @@ func (h *tradeOrderHandler) consume(ctx context.Context) error {
 	orders := make([]*model.EsOrder, 0, 100)
 	for o := range h.OrderCh {
 		if !o.OrderInfo.NeedUpdate() {
-			logger.Infof(ctx, "skip current order, order_id: %v", o.OrderInfo.OrderID)
+			//logger.Infof(ctx, "skip current order, order_id: %v", o.OrderInfo.OrderID)
 			continue
 		}
 		o.OrderInfo = o.OrderInfo.FieldClipping()
@@ -138,3 +151,14 @@ func (h *tradeOrderHandler) consume(ctx context.Context) error {
 	}
 	return nil
 }
+
+//func (h *tradeOrderHandler) parallelTestWorker(ctx context.Context) error {
+//	rand.Seed(time.Now().UnixNano())
+//	for o := range h.ParallelCh {
+//		// 50%概率
+//		if rand.Int()%100 < 5 {
+//			testUpdateOrder(ctx, o)
+//		}
+//	}
+//	return nil
+//}

@@ -27,6 +27,7 @@ func Get() *TradeOrdersEsModel {
 		tradeOrderEsModel = &TradeOrdersEsModel{
 			es_official.NewBaseModelV7(tradeOrdersClientName, tradeOrdersIndex),
 		}
+		elastic.SetTraceLog()
 	})
 	return tradeOrderEsModel
 }
@@ -49,14 +50,16 @@ func (t *TradeOrdersEsModel) UpdateOrdersByVersion(ctx context.Context, orders [
 			logger.Errorf(ctx, "seqNo or primaryTerm is nil, order_id: %v", o.OrderInfo.OrderID)
 			continue
 		}
-		indexReq := elastic.NewBulkIndexRequest().Index(t.IndexName(ctx)).Id(docID).IfSeqNo(*o.SeqNo).IfPrimaryTerm(*o.PrimaryTerm).Doc(o.OrderInfo)
+		indexReq := elastic.NewBulkIndexRequest().Index(t.IndexName(ctx)).Id(docID).IfSeqNo(*o.SeqNo).IfPrimaryTerm(*o.PrimaryTerm).Doc(map[string]interface{}{
+			"Tbext": o.OrderInfo.Tbext,
+		})
 
 		bulkRequest = bulkRequest.Add(indexReq)
 	}
 
 	_, err := bulkRequest.Do(ctx)
 	//for _, b := range br.Failed() {
-	//	logger.Errorf(ctx, utils.UnsafeMarshal(ctx, b.Error))
+	//	logger.WithField("update_by", "batch update").Errorf(ctx, utils.UnsafeMarshal(ctx, b.Error))
 	//}
 
 	return err

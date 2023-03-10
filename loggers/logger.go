@@ -1,10 +1,14 @@
 package loggers
 
 import (
+	"context"
 	"gitlab.xiaoduoai.com/golib/xd_sdk/logger"
 	"myscript/config"
 	"path/filepath"
 )
+
+type EsLogger struct {
+}
 
 func Init() {
 	conf := config.GetConfig()
@@ -25,4 +29,9 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (l *EsLogger) Printf(format string, v ...interface{}) {
+	ctx := context.Background()
+	logger.Infof(ctx, format, v)
 }
