@@ -117,7 +117,7 @@ func (h *tradeOrderHandler) consume(ctx context.Context) error {
 	orders := make([]*model.EsOrder, 0, 100)
 	for o := range h.OrderCh {
 		if !o.OrderInfo.NeedUpdate() {
-			//logger.Infof(ctx, "skip current order, order_id: %v", order.OrderID)
+			logger.Infof(ctx, "skip current order, order_id: %v", o.OrderInfo.OrderID)
 			continue
 		}
 		o.OrderInfo = o.OrderInfo.FieldClipping()

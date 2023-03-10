@@ -28,10 +28,17 @@ var TestCmd = &cobra.Command{
 
 func testMain(command *cobra.Command, args []string) {
 	ctx := context.Background()
-	o := testGetOrder(ctx, platform, orderID)
-	o.OrderInfo.RealBuyerNick = buyerID
-	testUpdateOrder(ctx, o)
-	testUpdateOrder(ctx, o)
+	parallelUpdateOrderTest(ctx)
+}
+
+func parallelUpdateOrderTest(ctx context.Context) {
+	orders := make([]*model.EsOrder, 0)
+	o1 := testGetOrder(ctx, platform, "3249837903036436522")
+	orders = append(orders, o1)
+	o2 := testGetOrder(ctx, platform, "3249599834713436522")
+	orders = append(orders, o2)
+	testUpdateOrder(ctx, o2)
+	testBatchUpdateOrder(ctx, orders)
 }
 
 func testGetOrder(ctx context.Context, platform string, orderID string) *model.EsOrder {
@@ -58,8 +65,21 @@ func testGetOrder(ctx context.Context, platform string, orderID string) *model.E
 func testUpdateOrder(ctx context.Context, order *model.EsOrder) {
 	tradeModel := trade_orders.Get()
 	docID := fmt.Sprintf("%s_%s", order.OrderInfo.Platform, order.OrderInfo.OrderID)
-	if _, err := tradeModel.UpdateService().Id(docID).IfSeqNo(*order.SeqNo).IfPrimaryTerm(*order.PrimaryTerm).Doc(order.OrderInfo).Do(ctx); err != nil {
+	if _, err := tradeModel.UpdateService().Id(docID).IfSeqNo(*order.SeqNo).IfPrimaryTerm(*order.PrimaryTerm).Doc(map[string]string{
+		"RealBuyerNick": buyerID,
+	}).Do(ctx); err != nil {
 		panic(err)
 	}
 	fmt.Println("update success")
+}
+
+func testBatchUpdateOrder(ctx context.Context, orders []*model.EsOrder) {
+	tradeModel := trade_orders.Get()
+	for idx, o := range orders {
+		o.OrderInfo.Tbext.OriginalOrder = fmt.Sprintf("test-version:%d", idx)
+	}
+	if err := tradeModel.UpdateOrdersByVersion(ctx, orders); err != nil {
+		panic(err)
+	}
+	fmt.Println("batch update success")
 }
