@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/olivere/elastic/v7"
 	"github.com/spf13/cobra"
 	"gitlab.xiaoduoai.com/golib/xd_sdk/logger"
 	"math/rand"
@@ -33,11 +34,12 @@ var TestCmd = &cobra.Command{
 
 func testMain(command *cobra.Command, args []string) {
 	ctx := context.Background()
-	o := testGetOrder(ctx, "tb", "3249837903036436522")
-	testUpdateOrder(ctx, o)
+	//o := testGetOrder(ctx, "tb", "3249837903036436522")
+	//testUpdateOrder(ctx, o)
 	//parallelUpdateOrderTest(ctx)
 	//BatchInsertNewOrders(ctx)
 	//testRand()
+	testQuery(ctx)
 }
 
 func parallelUpdateOrderTest(ctx context.Context) {
@@ -131,4 +133,15 @@ func testRand() {
 	}
 	fmt.Println("trueCnt:", trueCnt)
 	fmt.Println("falseCnt:", falseCnt)
+}
+
+func testQuery(ctx context.Context) {
+	query := elastic.NewRangeQuery("UpdatedAt").Lte(1678675500)
+	re, err := trade_orders.Get().SearchService().Query(query).Size(1000).Do(ctx)
+	if err != nil {
+		panic(err)
+	}
+	//s, _ := query.Source()
+	//fmt.Println(utils.UnsafeMarshal(ctx, s))
+	fmt.Println(re.TotalHits())
 }

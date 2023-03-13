@@ -11,6 +11,7 @@ import (
 	"io"
 	"myscript/esmodel/trade_orders"
 	"myscript/model"
+	"time"
 )
 
 var OrderRefreshCmd = &cobra.Command{
@@ -55,7 +56,8 @@ func (h *tradeOrderHandler) search(ctx context.Context) error {
 		close(h.OrderCh)
 		//close(h.ParallelCh)
 	}()
-	scroll := h.TradeOrdersClient.ScrollService().SearchSource(elastic.NewSearchSource().SeqNoAndPrimaryTerm(true)).Size(1000)
+	query := elastic.NewRangeQuery("UpdatedAt").Lte(1678675500)
+	scroll := h.TradeOrdersClient.ScrollService().SearchSource(elastic.NewSearchSource().SeqNoAndPrimaryTerm(true)).Query(query).Size(1000)
 	for {
 		results, err := scroll.Do(ctx)
 		if err != nil {
@@ -64,34 +66,34 @@ func (h *tradeOrderHandler) search(ctx context.Context) error {
 			}
 			return nil
 		}
-		esOrders := make([]*model.EsOrder, 0, len(results.Hits.Hits))
+
 		for _, hit := range results.Hits.Hits {
 			order := model.Order{}
 			if err := json.Unmarshal(hit.Source, &order); err != nil {
 				continue
 			}
-			esOrders = append(esOrders, &model.EsOrder{
+			esOrder := &model.EsOrder{
 				OrderInfo:   &order,
 				SeqNo:       hit.SeqNo,
 				PrimaryTerm: hit.PrimaryTerm,
-			})
-			//select {
-			//case h.OrderCh <- hit.Source:
-			//case <-ctx.Done():
-			//	return ctx.Err()
-			//}
-		}
-		for _, o := range esOrders {
+			}
 			select {
-			case h.OrderCh <- o:
+			case h.OrderCh <- esOrder:
 			case <-ctx.Done():
 				return ctx.Err()
 			}
-			//fmt.Println("put order into order chan")
-			//h.OrderCh <- o
-			//fmt.Println("put order into parallel chan")
-			//h.ParallelCh <- o
 		}
+		//for _, o := range esOrders {
+		//	select {
+		//	case h.OrderCh <- o:
+		//	case <-ctx.Done():
+		//		return ctx.Err()
+		//	}
+		//	//fmt.Println("put order into order chan")
+		//	//h.OrderCh <- o
+		//	//fmt.Println("put order into parallel chan")
+		//	//h.ParallelCh <- o
+		//}
 	}
 }
 
@@ -140,6 +142,7 @@ func (h *tradeOrderHandler) consume(ctx context.Context) error {
 				logger.WithError(err).Error(ctx, "update orders failed")
 			}
 			logger.Infof(ctx, "update per 100 orders, len: %v", len(orders))
+			time.Sleep(10 * time.Millisecond)
 			orders = make([]*model.EsOrder, 0, 100)
 		}
 	}
