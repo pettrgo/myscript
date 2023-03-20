@@ -7,6 +7,7 @@ import (
 	"myscript/config"
 	"myscript/esmodel"
 	"myscript/loggers"
+	"myscript/storage/mongo"
 	"os"
 )
 
@@ -28,6 +29,7 @@ var configFile string
 func init() {
 	rootCmd.AddCommand(script.OrderRefreshCmd)
 	rootCmd.AddCommand(script.TestCmd)
+	rootCmd.AddCommand(script.DayOrderShopSearchCmd)
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file")
 	cobra.OnInitialize(initConfig)
 }
@@ -36,4 +38,5 @@ func initConfig() {
 	config.Init(configFile)
 	loggers.Init()
 	esmodel.Init()
+	mongo.Init()
 }

@@ -9,6 +9,7 @@ import (
 	"gitlab.xiaoduoai.com/golib/xd_sdk/logger"
 	"golang.org/x/sync/errgroup"
 	"io"
+	"myscript/esmodel"
 	"myscript/esmodel/trade_orders"
 	"myscript/model"
 	"time"
@@ -35,6 +36,7 @@ func process(command *cobra.Command, args []string) {
 		//ParallelCh:        make(chan *model.EsOrder),
 		TradeOrdersClient: trade_orders.Get(),
 	}
+	esmodel.Init()
 
 	g.Go(func() error {
 		return handler.search(ctx)
@@ -56,7 +58,8 @@ func (h *tradeOrderHandler) search(ctx context.Context) error {
 		close(h.OrderCh)
 		//close(h.ParallelCh)
 	}()
-	query := elastic.NewRangeQuery("UpdatedAt").Lte(1678675500)
+	// 2023-02-24之前的订单
+	query := elastic.NewRangeQuery("UpdatedAt").Lte(1677168000)
 	scroll := h.TradeOrdersClient.ScrollService().SearchSource(elastic.NewSearchSource().SeqNoAndPrimaryTerm(true)).Query(query).Size(1000)
 	for {
 		results, err := scroll.Do(ctx)

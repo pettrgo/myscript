@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.xiaoduoai.com/golib/xd_sdk/logger"
 	"math/rand"
+	"myscript/esmodel"
 	"myscript/esmodel/trade_orders"
 	"myscript/model"
 	"time"
@@ -33,6 +34,7 @@ var TestCmd = &cobra.Command{
 }
 
 func testMain(command *cobra.Command, args []string) {
+	esmodel.Init()
 	ctx := context.Background()
 	//o := testGetOrder(ctx, "tb", "3249837903036436522")
 	//testUpdateOrder(ctx, o)

@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"context"
 	"encoding/json"
 )
 
@@ -17,7 +16,7 @@ func SortJsonStr(str string) string {
 	return string(data)
 }
 
-func UnsafeMarshal(ctx context.Context, value interface{}) string {
+func UnsafeMarshal(value interface{}) string {
 	data, err := json.Marshal(value)
 	if err != nil {
 		return ""

@@ -8,6 +8,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v0.0.5
 	gitlab.xiaoduoai.com/golib/xd_sdk v0.2.45
+	go.mongodb.org/mongo-driver v1.3.5
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
@@ -87,6 +88,8 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/uber/jaeger-client-go v2.15.0+incompatible // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
+	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
+	github.com/xdg/stringprep v1.0.0 // indirect
 	gitlab.xiaoduoai.com/base/conf-engine/sdk v1.0.7 // indirect
 	gitlab.xiaoduoai.com/base/gomodifytags v1.0.3 // indirect
 	gitlab.xiaoduoai.com/golib/elasticsearchc v0.0.2 // indirect
@@ -95,7 +98,6 @@ require (
 	gitlab.xiaoduoai.com/golib/octrace v1.0.8 // indirect
 	gitlab.xiaoduoai.com/golib/redisc v0.11.4 // indirect
 	gitlab.xiaoduoai.com/golib/xd_error v0.0.0-20200115090351-27f0c603ef05 // indirect
-	go.mongodb.org/mongo-driver v1.3.5 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
