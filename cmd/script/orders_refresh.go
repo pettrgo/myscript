@@ -60,7 +60,7 @@ func (h *tradeOrderHandler) search(ctx context.Context) error {
 	}()
 	// 2023-02-24之前的订单
 	query := elastic.NewRangeQuery("UpdatedAt").Lte(1677168000)
-	scroll := h.TradeOrdersClient.ScrollService().SearchSource(elastic.NewSearchSource().SeqNoAndPrimaryTerm(true)).Query(query).Size(1000)
+	scroll := h.TradeOrdersClient.ScrollService().SearchSource(elastic.NewSearchSource().SeqNoAndPrimaryTerm(true)).Query(query).Sort("UpdatedAt", false).Size(1000)
 	for {
 		results, err := scroll.Do(ctx)
 		if err != nil {
@@ -134,10 +134,10 @@ func (h *tradeOrderHandler) search(ctx context.Context) error {
 func (h *tradeOrderHandler) consume(ctx context.Context) error {
 	orders := make([]*model.EsOrder, 0, 100)
 	for o := range h.OrderCh {
-		if !o.OrderInfo.NeedUpdate() {
-			//logger.Infof(ctx, "skip current order, order_id: %v", o.OrderInfo.OrderID)
-			continue
-		}
+		//if !o.OrderInfo.NeedUpdate() {
+		//	//logger.Infof(ctx, "skip current order, order_id: %v", o.OrderInfo.OrderID)
+		//	continue
+		//}
 		o.OrderInfo = o.OrderInfo.FieldClipping()
 		orders = append(orders, o)
 		if len(orders) == 100 {

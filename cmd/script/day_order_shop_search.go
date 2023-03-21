@@ -32,10 +32,14 @@ type dayOrderSearchHandler struct {
 	Lines             [][]string
 }
 
+func init() {
+	DayOrderShopSearchCmd.Flags().StringVarP(&platform, "platform", "p", "", "平台")
+}
+
 var now = time.Now()
 
 func dayOrderShopSearchMain(command *cobra.Command, args []string) {
-	fmt.Println("start order refresh")
+	fmt.Println("start day order shop search")
 	ctx := context.Background()
 	handler := dayOrderSearchHandler{
 		TradeOrdersClient: trade_orders.Get(),
@@ -51,12 +55,17 @@ func dayOrderShopSearchMain(command *cobra.Command, args []string) {
 	handler.shopHandler(ctx)
 	handler.writeCSV(ctx)
 	logger.Infof(ctx, "get shop map: %s", utils.UnsafeMarshal(handler.shopMap))
-	fmt.Println("end order refresh")
+	fmt.Println("end day order shop search")
 }
 
 func (h *dayOrderSearchHandler) search(ctx context.Context) error {
 	// 2023-02-24之前的订单
-	query := elastic.NewRangeQuery("UpdatedAt").Gte(1678982400).Lte(1679068800)
+	rangeQuery := elastic.NewRangeQuery("CreatedAt").Gte(1678982400).Lte(1679068800)
+	//rangeQuery := elastic.NewRangeQuery("CreatedAt").Gte(0).Lte(time.Now().Unix())
+	termQuery := elastic.NewTermQuery("Platform", platform)
+	query := elastic.NewBoolQuery().Must(rangeQuery, termQuery)
+	DSL, _ := query.Source()
+	fmt.Println(utils.UnsafeMarshal(DSL))
 	scroll := h.TradeOrdersClient.ScrollService().SearchSource(elastic.NewSearchSource().SeqNoAndPrimaryTerm(true)).Query(query).Size(1000)
 	for {
 		results, err := scroll.Do(ctx)
