@@ -43,15 +43,18 @@ func (t *TradeOrdersEsModel) UpdateOrdersByVersion(ctx context.Context, orders [
 
 	bulkRequest := t.Client().Bulk()
 
+	orderIDs := make([]string, 0, len(orders))
 	for _, o := range orders {
 		docID := fmt.Sprintf("%s_%s", o.OrderInfo.Platform, o.OrderInfo.OrderID)
 		if o.SeqNo == nil || o.PrimaryTerm == nil {
 			logger.Errorf(ctx, "seqNo or primaryTerm is nil, order_id: %v", o.OrderInfo.OrderID)
 			continue
 		}
+		orderIDs = append(orderIDs, o.OrderInfo.OrderID)
 		indexReq := elastic.NewBulkIndexRequest().Index(t.IndexName(ctx)).Id(docID).IfSeqNo(*o.SeqNo).IfPrimaryTerm(*o.PrimaryTerm).Doc(o.OrderInfo)
 		bulkRequest = bulkRequest.Add(indexReq)
 	}
+	logger.Infof(ctx, "current handler order ids: %v", orderIDs)
 
 	_, err := bulkRequest.Do(ctx)
 	//for _, b := range br.Failed() {

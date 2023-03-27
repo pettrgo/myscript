@@ -9,9 +9,11 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.xiaoduoai.com/golib/xd_sdk/logger"
 	"io"
+	"myscript/config"
 	"myscript/esmodel"
 	"myscript/esmodel/trade_orders"
 	"myscript/model"
+	"myscript/storage/mongo"
 	"myscript/utils"
 	"os"
 	"time"
@@ -21,7 +23,12 @@ var DayOrderShopSearchCmd = &cobra.Command{
 	Use:   "day_order_shop_search",
 	Short: "查询某天订单店铺数据统计",
 	Long:  "查询某天订单店铺数据统计",
-	Run:   dayOrderShopSearchMain,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		conf := config.GetConfig()
+		esmodel.Init()
+		mongo.Init(conf.Mongos)
+	},
+	Run: dayOrderShopSearchMain,
 }
 
 type dayOrderSearchHandler struct {

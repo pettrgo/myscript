@@ -5,9 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"myscript/cmd/script"
 	"myscript/config"
-	"myscript/esmodel"
 	"myscript/loggers"
-	"myscript/storage/mongo"
 	"os"
 )
 
@@ -30,6 +28,7 @@ func init() {
 	rootCmd.AddCommand(script.OrderRefreshCmd)
 	rootCmd.AddCommand(script.TestCmd)
 	rootCmd.AddCommand(script.DayOrderShopSearchCmd)
+	rootCmd.AddCommand(script.PubTransferMsgCmd)
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file")
 	cobra.OnInitialize(initConfig)
 }
@@ -37,6 +36,4 @@ func init() {
 func initConfig() {
 	config.Init(configFile)
 	loggers.Init()
-	esmodel.Init()
-	mongo.Init()
 }

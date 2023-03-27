@@ -26,7 +26,10 @@ var TestCmd = &cobra.Command{
 	Use:   "test",
 	Short: "测试用指令",
 	Long:  "测试用指令",
-	Run:   testMain,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		esmodel.Init()
+	},
+	Run: testMain,
 }
 
 func testMain(command *cobra.Command, args []string) {

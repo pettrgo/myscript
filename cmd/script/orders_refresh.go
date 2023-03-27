@@ -19,7 +19,10 @@ var OrderRefreshCmd = &cobra.Command{
 	Use:   "order_refresh",
 	Short: "刷新trade_orders订单数据",
 	Long:  "刷新trade_orders订单数据",
-	Run:   process,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		esmodel.Init()
+	},
+	Run: process,
 }
 
 type tradeOrderHandler struct {
@@ -36,7 +39,6 @@ func process(command *cobra.Command, args []string) {
 		//ParallelCh:        make(chan *model.EsOrder),
 		TradeOrdersClient: trade_orders.Get(),
 	}
-	esmodel.Init()
 
 	g.Go(func() error {
 		return handler.search(ctx)
@@ -134,10 +136,10 @@ func (h *tradeOrderHandler) search(ctx context.Context) error {
 func (h *tradeOrderHandler) consume(ctx context.Context) error {
 	orders := make([]*model.EsOrder, 0, 100)
 	for o := range h.OrderCh {
-		//if !o.OrderInfo.NeedUpdate() {
-		//	//logger.Infof(ctx, "skip current order, order_id: %v", o.OrderInfo.OrderID)
-		//	continue
-		//}
+		if !o.OrderInfo.NeedUpdate() {
+			//logger.Infof(ctx, "skip current order, order_id: %v", o.OrderInfo.OrderID)
+			continue
+		}
 		o.OrderInfo = o.OrderInfo.FieldClipping()
 		orders = append(orders, o)
 		if len(orders) == 100 {
