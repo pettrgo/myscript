@@ -47,7 +47,7 @@ func pubTransferMsgMain(command *cobra.Command, args []string) {
 		Date:       time.Now().Unix(),
 		Platform:   "tb",
 		ShopID:     "test_shop_id",
-		Buyer:      "one_id_test",
+		Buyer:      "test_buyer_id",
 		BuyerOneID: "one_id_test",
 		FromSeller: "seller01",
 		ToSeller:   "seller02",
