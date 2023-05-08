@@ -1,7 +1,10 @@
 package utils
 
 import (
+	"context"
+	"encoding/csv"
 	"encoding/json"
+	"os"
 )
 
 func SortJsonStr(str string) string {
@@ -22,4 +25,14 @@ func UnsafeMarshal(value interface{}) string {
 		return ""
 	}
 	return string(data)
+}
+
+func NewCsvFile(ctx context.Context, filePath string) (*csv.Writer, error) {
+	file, err := os.Create(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	file.WriteString("\xEF\xBB\xBF")
+	return csv.NewWriter(file), nil
 }

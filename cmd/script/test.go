@@ -32,13 +32,15 @@ var TestCmd = &cobra.Command{
 	Run: testMain,
 }
 
+var loc, _ = time.LoadLocation("Asia/Shanghai")
+
 func testMain(command *cobra.Command, args []string) {
 	esmodel.Init()
 	ctx := context.Background()
 	//o := testGetOrder(ctx, "tb", "3249837903036436522")
 	//testUpdateOrder(ctx, o)
 	//parallelUpdateOrderTest(ctx)
-	//BatchInsertNewOrders(ctx)
+	BatchInsertNewOrders(ctx)
 	//testRand()
 	testQuery(ctx)
 }
@@ -107,12 +109,18 @@ func BatchInsertNewOrders(ctx context.Context) {
 		panic(err)
 	}
 	tradeModel := trade_orders.Get()
-	for i := 0; i < 50000; i++ {
+
+	t, err := time.ParseInLocation("2006-01-02 15:04:05", "2022-05-05 08:00:00", loc)
+	if err != nil {
+		panic(err)
+	}
+	for i := 0; i < 100000; i++ {
+		n := rand.Int63n(86400*365) - 86400*182
 		order.OrderID = fmt.Sprintf("test_%d", time.Now().UnixNano())
 		order.BuyerID = "one_id_test_buyer"
-		order.CreatedAt = time.Now().Unix()
-		order.UpdatedAt = time.Now().Unix()
-		order.UpdateTime = time.Now()
+		order.CreatedAt = t.Unix() + n
+		order.UpdatedAt = t.Unix() + n
+		order.UpdateTime = time.Unix(t.Unix()+n, 0)
 		docID := fmt.Sprintf("%s_%s", order.Platform, order.OrderID)
 		if err := tradeModel.InsertBodyJSON(ctx, docID, "", order); err != nil {
 			logger.Errorf(ctx, "error")

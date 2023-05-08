@@ -29,6 +29,7 @@ func init() {
 	rootCmd.AddCommand(script.TestCmd)
 	rootCmd.AddCommand(script.DayOrderShopSearchCmd)
 	rootCmd.AddCommand(script.PubTransferMsgCmd)
+	rootCmd.AddCommand(script.TaskSearchCmd)
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file")
 	cobra.OnInitialize(initConfig)
 }
